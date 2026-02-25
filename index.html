@@ -874,7 +874,7 @@
       </div>
 
       <div class="page-footer">
-        <span>🍌 BananaAI</span> &nbsp;·&nbsp; Polling <span>98.214.44.5:5000</span>
+        <span>🍌 BananaAI</span> &nbsp;·&nbsp; Polling <span>arguments-planets-achieve-educators.trycloudflare.com</span>
         <div class="footer-links">
           <a onclick="navigate('chat')">Web Chat</a>
           <a onclick="navigate('tos')">ToS</a>
@@ -1395,7 +1395,7 @@ script.end</pre>
   /* ═══════════════════════════════════════
      STATUS PAGE
   ═══════════════════════════════════════ */
-  const API = 'http://98.214.44.5:5000';
+  let API = localStorage.getItem('bpeApiUrl') || 'https://arguments-planets-achieve-educators.trycloudflare.com';
   const STATUS_ENDPOINTS = [
     { method: 'GET', path: '/api/health', label: 'Health Check' },
     { method: 'GET', path: '/api/models', label: 'Models List' },
@@ -1595,7 +1595,7 @@ script.end</pre>
   /* ═══════════════════════════════════════
      CHAT PAGE
   ═══════════════════════════════════════ */
-  const CHAT_API    = 'http://98.214.44.5:5000';
+  let CHAT_API = API;
   const MAX_TOKENS  = 1000;
   const CHAT_USER   = 'webchat_' + Math.random().toString(36).slice(2, 9);
 
