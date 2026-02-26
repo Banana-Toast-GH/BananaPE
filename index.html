@@ -742,6 +742,8 @@
     /* ═══════════════════════════════════════
        ANIMATIONS
     ═══════════════════════════════════════ */
+    .home-feature-card:hover { border-color: rgba(255,225,53,0.3) !important; transform: translateY(-3px); }
+
     @keyframes fadeIn  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeUp  { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes wobble  { 0%,100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
@@ -778,15 +780,8 @@
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-group">
-      <div class="sidebar-group-label">🍌 BananaAI</div>
-      <div class="sidebar-item active" id="nav-status" onclick="navigate('status')">
-        <span class="si-icon">📡</span> Status
-      </div>
-      <div class="sidebar-item" id="nav-chat" onclick="navigate('chat')">
-        <span class="si-icon">💬</span> Web Chat
-      </div>
-      <div class="sidebar-item" id="nav-tos" onclick="navigate('tos')">
-        <span class="si-icon">📋</span> Terms of Service
+      <div class="sidebar-item active" id="nav-home" onclick="navigate('home')" style="margin-bottom:4px">
+        <span class="si-icon">🍌</span> Home
       </div>
     </div>
     <div class="sidebar-divider"></div>
@@ -801,6 +796,19 @@
     </div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-group">
+      <div class="sidebar-group-label">🍌 BananaAI</div>
+      <div class="sidebar-item" id="nav-status" onclick="navigate('status')">
+        <span class="si-icon">📡</span> Status
+      </div>
+      <div class="sidebar-item" id="nav-chat" onclick="navigate('chat')">
+        <span class="si-icon">💬</span> Web Chat
+      </div>
+      <div class="sidebar-item" id="nav-tos" onclick="navigate('tos')">
+        <span class="si-icon">📋</span> Terms of Service
+      </div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-group">
       <div class="sidebar-group-label">🔗 Links</div>
       <div class="sidebar-item" onclick="window.open('https://github.com/Banana-Toast-GH/BananaProjectEditor','_blank')">
         <span class="si-icon">🐙</span> GitHub
@@ -811,8 +819,154 @@
   <!-- MAIN -->
   <div class="main" id="main">
 
+    <!-- ══════════════ HOME PAGE ══════════════ -->
+    <div class="page active" id="page-home">
+
+      <!-- HERO -->
+      <div style="position:relative;overflow:hidden;padding:80px 24px 64px;text-align:center;background:linear-gradient(180deg,rgba(255,225,53,0.06) 0%,transparent 100%)">
+        <!-- floating blobs -->
+        <div style="position:absolute;top:-60px;left:-80px;width:320px;height:320px;background:radial-gradient(circle,rgba(255,225,53,0.12) 0%,transparent 70%);pointer-events:none"></div>
+        <div style="position:absolute;bottom:-40px;right:-60px;width:280px;height:280px;background:radial-gradient(circle,rgba(255,225,53,0.08) 0%,transparent 70%);pointer-events:none"></div>
+
+        <div style="font-size:5rem;display:block;margin-bottom:16px;animation:wobble 3s ease-in-out infinite;line-height:1">🍌</div>
+        <div style="font-size:0.7rem;letter-spacing:6px;text-transform:uppercase;color:var(--banana);margin-bottom:12px;opacity:0.8">Introducing</div>
+        <h1 style="font-family:'Boogaloo',cursive;font-size:clamp(3rem,8vw,5.5rem);color:var(--banana);text-shadow:6px 6px 0 var(--banana-deep),0 0 60px rgba(255,225,53,0.3);line-height:1;margin-bottom:10px">Banana Project Editor</h1>
+        <p style="font-size:0.85rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:32px">The game engine for beginners who mean business</p>
+
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:48px">
+          <button onclick="navigate('download')" style="display:inline-flex;align-items:center;gap:9px;padding:14px 28px;background:var(--banana);color:var(--black);border:none;border-radius:12px;font-family:'Boogaloo',cursive;font-size:1.15rem;letter-spacing:1px;cursor:pointer;box-shadow:0 6px 0 var(--banana-deep);transition:transform 0.15s,box-shadow 0.15s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='none'">
+            ⬇ Download BPE
+          </button>
+          <button onclick="navigate('docs')" style="display:inline-flex;align-items:center;gap:9px;padding:14px 28px;background:transparent;color:var(--text);border:1px solid var(--card-border);border-radius:12px;font-family:'Boogaloo',cursive;font-size:1.15rem;letter-spacing:1px;cursor:pointer;transition:border-color 0.2s,color 0.2s" onmouseover="this.style.borderColor='var(--banana)';this.style.color='var(--banana)'" onmouseout="this.style.borderColor='var(--card-border)';this.style.color='var(--text)'">
+            📖 Read the Docs
+          </button>
+        </div>
+
+        <!-- hero code preview -->
+        <div style="max-width:520px;margin:0 auto;background:var(--card);border:1px solid var(--card-border);border-radius:16px;padding:20px;text-align:left;box-shadow:0 20px 60px rgba(0,0,0,0.4)">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:14px">
+            <div style="width:10px;height:10px;border-radius:50%;background:#FF5F56"></div>
+            <div style="width:10px;height:10px;border-radius:50%;background:#FFBD2E"></div>
+            <div style="width:10px;height:10px;border-radius:50%;background:#27C93F"></div>
+            <span style="margin-left:8px;font-size:0.62rem;color:var(--muted);letter-spacing:2px">clicker_game.bcode</span>
+          </div>
+          <pre style="margin:0;font-size:0.76rem;line-height:1.9;color:var(--text);background:none;border:none;padding:0;overflow:visible"><span style="color:var(--muted)">script.start</span>
+
+<span style="color:#7EC8E3">attach</span> <span style="color:#FFE135">"Banana Project Editor"</span>;
+<span style="color:#7EC8E3">attach</span> <span style="color:#FFE135">"ClickButton"</span>;
+
+<span style="color:#7EC8E3">var</span> score = <span style="color:#B5EAD7">0</span>;
+
+<span style="color:#C3B1E1">event:onStart</span>()
+    window.SetTitle(<span style="color:#FFE135">"Clicker — Score: 0"</span>);
+event.end
+
+<span style="color:#C3B1E1">object.event:OnClick</span>()
+    score = score + <span style="color:#B5EAD7">1</span>;
+    window.SetTitle(<span style="color:#FFE135">"Score: "</span> .. score);
+event.end
+
+<span style="color:var(--muted)">script.end</span></pre>
+        </div>
+      </div>
+
+      <!-- FEATURES -->
+      <div style="max-width:860px;margin:0 auto;padding:0 24px 60px">
+
+        <div style="text-align:center;margin-bottom:40px">
+          <div style="font-family:'Boogaloo',cursive;font-size:2rem;color:var(--banana);text-shadow:3px 3px 0 var(--banana-deep);margin-bottom:8px">Why BPE?</div>
+          <p style="color:var(--muted);font-size:0.78rem;max-width:480px;margin:0 auto;line-height:1.8">Built for people who want to make real games without drowning in complexity. Start simple, grow fast.</p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:48px">
+
+          <div class="home-feature-card" onclick="navigate('docs')" style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:24px;cursor:pointer;transition:border-color 0.2s,transform 0.15s;position:relative;overflow:hidden">
+            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--banana-deep),var(--banana))"></div>
+            <div style="font-size:2rem;margin-bottom:12px">🎮</div>
+            <div style="font-family:'Boogaloo',cursive;font-size:1.1rem;color:var(--banana);margin-bottom:7px;letter-spacing:1px">Learn by Making</div>
+            <p style="font-size:0.75rem;color:var(--muted);line-height:1.8;margin:0">No tutorials that never end. Open BPE, write some BCode, and watch your game run. That's it.</p>
+          </div>
+
+          <div class="home-feature-card" onclick="navigate('docs')" style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:24px;cursor:pointer;transition:border-color 0.2s,transform 0.15s;position:relative;overflow:hidden">
+            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#7EC8E3,#C3B1E1)"></div>
+            <div style="font-size:2rem;margin-bottom:12px">📝</div>
+            <div style="font-family:'Boogaloo',cursive;font-size:1.1rem;color:var(--banana);margin-bottom:7px;letter-spacing:1px">BCode Language</div>
+            <p style="font-size:0.75rem;color:var(--muted);line-height:1.8;margin:0">A custom scripting language that feels natural. Event-driven, readable, and it transpiles to Lua so it's fast.</p>
+          </div>
+
+          <div class="home-feature-card" onclick="navigate('chat')" style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:24px;cursor:pointer;transition:border-color 0.2s,transform 0.15s;position:relative;overflow:hidden">
+            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--banana-deep),var(--green,#39FF14))"></div>
+            <div style="font-size:2rem;margin-bottom:12px">🤖</div>
+            <div style="font-family:'Boogaloo',cursive;font-size:1.1rem;color:var(--banana);margin-bottom:7px;letter-spacing:1px">BananaAI Built-in</div>
+            <p style="font-size:0.75rem;color:var(--muted);line-height:1.8;margin:0">Stuck? Ask BananaAI. It knows BCode inside out and can write scripts, explain concepts, or debug your project.</p>
+          </div>
+
+          <div class="home-feature-card" style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:24px;transition:border-color 0.2s,transform 0.15s;position:relative;overflow:hidden">
+            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#FF9500,#FFE135)"></div>
+            <div style="font-size:2rem;margin-bottom:12px">🪟</div>
+            <div style="font-family:'Boogaloo',cursive;font-size:1.1rem;color:var(--banana);margin-bottom:7px;letter-spacing:1px">Just Java</div>
+            <p style="font-size:0.75rem;color:var(--muted);line-height:1.8;margin:0">No installs beyond Java. No accounts needed to make games. Download, run, create.</p>
+          </div>
+
+        </div>
+
+        <!-- EXAMPLE GAMES -->
+        <div style="text-align:center;margin-bottom:28px">
+          <div style="font-family:'Boogaloo',cursive;font-size:2rem;color:var(--banana);text-shadow:3px 3px 0 var(--banana-deep);margin-bottom:8px">What Can You Make?</div>
+          <p style="color:var(--muted);font-size:0.78rem;line-height:1.8">BPE is small but mighty. Here are some ideas to get you started.</p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:48px">
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:20px;text-align:center">
+            <div style="font-size:2.5rem;margin-bottom:8px">👆</div>
+            <div style="font-family:'Boogaloo',cursive;color:var(--banana);font-size:1rem;margin-bottom:5px">Clicker Games</div>
+            <div style="font-size:0.7rem;color:var(--muted);line-height:1.7">The classic starter project. Buttons, scores, and satisfying clicks.</div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:20px;text-align:center">
+            <div style="font-size:2.5rem;margin-bottom:8px">🏃</div>
+            <div style="font-family:'Boogaloo',cursive;color:var(--banana);font-size:1rem;margin-bottom:5px">Platformers</div>
+            <div style="font-size:0.7rem;color:var(--muted);line-height:1.7">Gravity, jumping, collision — learn physics the fun way.</div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:20px;text-align:center">
+            <div style="font-size:2.5rem;margin-bottom:8px">🐍</div>
+            <div style="font-family:'Boogaloo',cursive;color:var(--banana);font-size:1rem;margin-bottom:5px">Snake / Arcade</div>
+            <div style="font-size:0.7rem;color:var(--muted);line-height:1.7">Grid movement, game loops, and high scores. Old school fun.</div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:20px;text-align:center">
+            <div style="font-size:2.5rem;margin-bottom:8px">🎨</div>
+            <div style="font-family:'Boogaloo',cursive;color:var(--banana);font-size:1rem;margin-bottom:5px">Interactive Art</div>
+            <div style="font-size:0.7rem;color:var(--muted);line-height:1.7">Animate objects, react to mouse input, build weird cool stuff.</div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div style="background:linear-gradient(135deg,rgba(255,225,53,0.08),rgba(255,225,53,0.03));border:1px solid rgba(255,225,53,0.2);border-radius:18px;padding:40px;text-align:center">
+          <div style="font-size:3rem;margin-bottom:12px">🍌</div>
+          <div style="font-family:'Boogaloo',cursive;font-size:2rem;color:var(--banana);text-shadow:3px 3px 0 var(--banana-deep);margin-bottom:10px">Ready to make something?</div>
+          <p style="color:var(--muted);font-size:0.78rem;max-width:400px;margin:0 auto 24px;line-height:1.8">Download BPE, read the docs, and start building. BananaAI is there when you get stuck.</p>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+            <button onclick="navigate('download')" style="display:inline-flex;align-items:center;gap:8px;padding:12px 26px;background:var(--banana);color:var(--black);border:none;border-radius:10px;font-family:'Boogaloo',cursive;font-size:1.05rem;letter-spacing:1px;cursor:pointer;box-shadow:0 4px 0 var(--banana-deep);transition:transform 0.15s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">⬇ Download</button>
+            <button onclick="navigate('docs')" style="display:inline-flex;align-items:center;gap:8px;padding:12px 26px;background:transparent;color:var(--text);border:1px solid var(--card-border);border-radius:10px;font-family:'Boogaloo',cursive;font-size:1.05rem;letter-spacing:1px;cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--banana)'" onmouseout="this.style.borderColor='var(--card-border)'">📖 Documentation</button>
+            <button onclick="navigate('chat')" style="display:inline-flex;align-items:center;gap:8px;padding:12px 26px;background:transparent;color:var(--text);border:1px solid var(--card-border);border-radius:10px;font-family:'Boogaloo',cursive;font-size:1.05rem;letter-spacing:1px;cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--banana)'" onmouseout="this.style.borderColor='var(--card-border)'">🤖 Try BananaAI</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="page-footer">
+        <span>🍌 Banana Project Editor</span> &nbsp;·&nbsp; Made with love and too many bananas
+        <div class="footer-links">
+          <a onclick="navigate('download')">Download</a>
+          <a onclick="navigate('docs')">Docs</a>
+          <a onclick="navigate('chat')">BananaAI</a>
+          <a onclick="navigate('status')">Status</a>
+          <a href="https://github.com/Banana-Toast-GH/BananaProjectEditor" target="_blank">GitHub</a>
+        </div>
+      </div>
+    </div>
+
     <!-- ══════════════ STATUS PAGE ══════════════ -->
-    <div class="page active" id="page-status">
+    <div class="page" id="page-status">
       <div class="page-hero">
         <span class="hero-icon">📡</span>
         <h1>BananaAI Status</h1>
@@ -1367,11 +1521,11 @@ script.end</pre>
      NAVIGATION
   ═══════════════════════════════════════ */
   const PAGE_TITLES = {
-    status: 'Status', tos: 'Terms of Service',
+    home: 'Home', status: 'Status', tos: 'Terms of Service',
     chat: 'Web Chat', docs: 'Documentation', download: 'Download'
   };
 
-  let currentPage = 'status';
+  let currentPage = 'home';
   let sidebarOpen = true;
 
   function navigate(page) {
