@@ -446,6 +446,7 @@
     .history-bar.down     { background: var(--red); }
     .history-bar.sleeping { background: var(--banana); opacity: 0.45; }
     .history-bar.unknown  { background: var(--card-border); }
+    .history-bar.broken   { background: var(--orange); opacity: 0.7; }
     .history-labels { display: flex; justify-content: space-between; font-size: 0.62rem; color: var(--muted); }
 
     /* endpoint rows */
@@ -854,11 +855,35 @@
         </div>
 
         <div class="section-title" style="margin-bottom:14px">📅 Uptime History — Last 30 checks</div>
-        <div class="history-bars" id="historyBars"></div>
-        <div class="history-labels">
-          <span>30 checks ago</span>
-          <span id="uptimePct">—% uptime</span>
-          <span>Now</span>
+
+        <!-- Editor Chat row -->
+        <div style="margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--text2)">🖥️ Editor Chat</span>
+            <span style="font-size:0.65rem;color:var(--muted)" id="uptimePctEditor">—</span>
+          </div>
+          <div class="history-bars" id="historyBarsEditor"></div>
+          <div class="history-labels"><span>30 checks ago</span><span>Now</span></div>
+        </div>
+
+        <!-- Web Chat row -->
+        <div style="margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--text2)">🌐 Web Chat</span>
+            <span style="font-size:0.65rem;color:var(--muted)" id="uptimePctWeb">—</span>
+          </div>
+          <div class="history-bars" id="historyBarsWeb"></div>
+          <div class="history-labels"><span>30 checks ago</span><span>Now</span></div>
+        </div>
+
+        <!-- GitHub API row -->
+        <div style="margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--text2)">🐙 GitHub API</span>
+            <span style="font-size:0.65rem;color:var(--muted)" id="uptimePctGithub">—</span>
+          </div>
+          <div class="history-bars" id="historyBarsGithub"></div>
+          <div class="history-labels"><span>30 checks ago</span><span>Now</span></div>
         </div>
 
         <div class="section-title" style="margin:28px 0 14px">🔌 Endpoint Health</div>
@@ -1412,11 +1437,16 @@ script.end</pre>
   ═══════════════════════════════════════ */
   let API = localStorage.getItem('bpeApiUrl') || 'https://arguments-planets-achieve-educators.trycloudflare.com';
   const STATUS_ENDPOINTS = [
-    { method: 'GET', path: '/api/health', label: 'Health Check' },
-    { method: 'GET', path: '/api/models', label: 'Models List' },
+    { method: 'GET', path: '/api/health/editor', label: 'Editor Health' },
+    { method: 'GET', path: '/api/health/web',    label: 'Web Health'    },
+    { method: 'GET', path: '/api/models',         label: 'Models List'  },
   ];
 
-  let history30    = JSON.parse(localStorage.getItem('bpeHistory')    || '[]');
+  // Three separate histories: editor (health), web (tunnel), github
+  let histEditor  = JSON.parse(localStorage.getItem('bpeHistEditor')  || '[]');
+  let histWeb     = JSON.parse(localStorage.getItem('bpeHistWeb')     || '[]');
+  let histGithub  = JSON.parse(localStorage.getItem('bpeHistGithub')  || '[]');
+  // Each history entry: { state, date, ping }
   let incidents    = JSON.parse(localStorage.getItem('bpeIncidents')  || '[]');
   let serverStart  = localStorage.getItem('bpeStart') || null;
   let countdownVal = 30;
@@ -1434,22 +1464,78 @@ script.end</pre>
   }
 
   function renderHistory() {
-    const el = document.getElementById('historyBars');
+    renderHistoryRow('historyBarsEditor', 'uptimePctEditor', histEditor, '🖥️ Editor Chat');
+    renderHistoryRow('historyBarsWeb',    'uptimePctWeb',    histWeb,    '🌐 Web Chat');
+    renderHistoryRow('historyBarsGithub', 'uptimePctGithub', histGithub, '🐙 GitHub API');
+  }
+
+  const HEIGHTS = { up:'100%', sleeping:'50%', partial:'60%', down:'25%', unknown:'15%', broken:'37%' };
+  const STATE_COLORS = { up:'var(--green)', sleeping:'var(--banana)', partial:'var(--orange)', down:'var(--red)', unknown:'var(--muted)', broken:'var(--orange)' };
+  const STATE_LABELS = { up:'Online', sleeping:'Sleeping', partial:'Degraded', down:'Offline', unknown:'Unknown', broken:'Broken' };
+
+  function showTooltipOnBar(bar, entry, sourceName) {
+    // Remove any existing tooltips
+    document.querySelectorAll('.bar-tt').forEach(t => t.remove());
+    const tt = document.createElement('div');
+    tt.className = 'bar-tt';
+    tt.style.cssText = 'position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#0D1117;border:1px solid var(--banana);border-radius:8px;padding:10px 14px;font-size:0.7rem;pointer-events:none;width:170px;box-shadow:0 4px 24px rgba(0,0,0,0.8);z-index:9999;white-space:nowrap';
+    tt.innerHTML = `
+      <div style="font-size:0.6rem;letter-spacing:2px;color:#666;text-transform:uppercase;margin-bottom:6px">${sourceName}</div>
+      <div style="display:flex;justify-content:space-between;gap:16px;margin-bottom:3px"><span style="color:#666">State</span><span style="font-weight:700;color:${STATE_COLORS[entry.state]||'var(--text)'}">${STATE_LABELS[entry.state]||entry.state}</span></div>
+      <div style="display:flex;justify-content:space-between;gap:16px;margin-bottom:3px"><span style="color:#666">Date</span><span style="color:var(--text)">${entry.date||'—'}</span></div>
+      <div style="display:flex;justify-content:space-between;gap:16px"><span style="color:#666">Ping</span><span style="color:var(--banana)">${entry.ping != null ? entry.ping+'ms' : '—'}</span></div>
+    `;
+    bar.style.position = 'relative';
+    bar.appendChild(tt);
+  }
+
+  function showTooltip(e, entry, sourceName) {
+    const tt = document.getElementById('barTooltip');
+    document.getElementById('ttSource').textContent = sourceName;
+    document.getElementById('ttState').textContent  = STATE_LABELS[entry.state] || entry.state;
+    document.getElementById('ttState').style.color  = STATE_COLORS[entry.state] || 'var(--text)';
+    document.getElementById('ttDate').textContent   = entry.date || '—';
+    document.getElementById('ttPing').textContent   = entry.ping != null ? entry.ping + 'ms' : '—';
+    tt.style.display = 'block';
+    posTooltip(e);
+  }
+
+  function posTooltip(e) {
+    const tt = document.getElementById('barTooltip');
+    let x = e.clientX - 85, y = e.clientY + 18;
+    if (x + 180 > window.innerWidth) x = e.clientX - 190;
+    if (y < 0) y = e.clientY + 12;
+    tt.style.left = x + 'px';
+    tt.style.top  = y + 'px';
+  }
+
+  function hideTooltip() {
+    document.querySelectorAll('.bar-tt').forEach(t => t.remove());
+  }
+
+
+
+  function renderHistoryRow(elId, pctId, hist, sourceName) {
+    const el = document.getElementById(elId);
     if (!el) return;
     el.innerHTML = '';
-    const padded = [...Array(Math.max(0, 30 - history30.length)).fill('unknown'), ...history30.slice(-30)];
-    padded.forEach(st => {
-      const b = document.createElement('div');
-      b.className = `history-bar ${st}`;
-      b.style.height = ({up:'100%',sleeping:'50%',partial:'60%',down:'25%',unknown:'15%'})[st] || '15%';
-      b.title = ({up:'✅ Online',sleeping:'😴 Sleeping',partial:'⚠️ Degraded',down:'❌ Down',unknown:'❔ Unknown'})[st] || '—';
+    const padded = [...Array(Math.max(0, 30 - hist.length)).fill(null), ...hist.slice(-30)];
+    padded.forEach(entry => {
+      const st = entry ? entry.state : 'unknown';
+      const b  = document.createElement('div');
+      b.className    = 'history-bar ' + st;
+      b.style.height = HEIGHTS[st] || '15%';
+      const capturedEntry = entry || { state: 'unknown', date: '—', ping: null };
+      b.addEventListener('mouseenter', function(ev) { showTooltipOnBar(ev.currentTarget, capturedEntry, sourceName); });
+      b.addEventListener('mouseleave', hideTooltip);
       el.appendChild(b);
     });
-    const upCount = history30.filter(s => s === 'up').length;
-    const rel     = history30.filter(s => s !== 'unknown' && s !== 'sleeping').length;
-    const pct     = rel > 0 ? Math.round((upCount / rel) * 100) : 0;
-    const sleepN  = history30.filter(s => s === 'sleeping').length;
-    document.getElementById('uptimePct').textContent = `${pct}% uptime${sleepN > 0 ? ` · ${sleepN} sleeping` : ''}`;
+    const valid   = hist.filter(e => e && e.state !== 'unknown' && e.state !== 'sleeping');
+    const upCount = hist.filter(e => e && e.state === 'up').length;
+    const pct     = valid.length > 0 ? Math.round((upCount / valid.length) * 100) : 0;
+    const sleepN  = hist.filter(e => e && e.state === 'sleeping').length;
+    const pctEl   = document.getElementById(pctId);
+    if (pctEl) pctEl.textContent = pct + '% uptime' + (sleepN > 0 ? ' · ' + sleepN + ' sleeping' : '');
   }
 
   function renderEndpoints(results) {
@@ -1513,17 +1599,41 @@ script.end</pre>
 
     if (!sleeping) {
       results = await Promise.all(STATUS_ENDPOINTS.map(pingEndpoint));
-      const hr = results.find(r => r.path === '/api/health');
+      const hr = results.find(r => r.path === '/api/health/web');
       serverOnline = hr?.ok ?? false;
     }
 
-    const healthResult = results.find(r => r.path === '/api/health');
-    const prevStatus = history30[history30.length - 1];
+    const healthResult = results.find(r => r.path === '/api/health/web');
+    const prevStatus = histEditor.length ? histEditor[histEditor.length-1].state : undefined;
     const newStatus  = sleeping ? 'sleeping' : serverOnline ? 'up' : 'down';
+    const entryDate  = new Date().toLocaleString();
+    const healthPing = healthResult ? healthResult.latency : null;
 
-    history30.push(newStatus);
-    if (history30.length > 30) history30 = history30.slice(-30);
-    localStorage.setItem('bpeHistory', JSON.stringify(history30));
+    // Ping GitHub API
+    let githubState = 'unknown', githubPing = null;
+    try {
+      const gt0 = performance.now();
+      const gr  = await fetch('https://api.github.com/repos/Banana-Toast-GH/BananaProjectEditor', { signal: AbortSignal.timeout(5000) });
+      githubPing  = Math.round(performance.now() - gt0);
+      githubState = gr.ok ? 'up' : 'down';
+    } catch { githubState = 'down'; }
+
+    // Push to all three histories
+    const editorResult = results.find(r => r.path === '/api/health/editor');
+    const webResult    = results.find(r => r.path === '/api/health/web');
+    const editorOnline = editorResult?.ok ?? false;
+    const webOnline    = webResult?.ok ?? false;
+    const editorEntry  = { state: sleeping ? 'sleeping' : editorOnline ? 'up' : 'broken', date: entryDate, ping: editorResult?.latency ?? null };
+    const webEntry     = { state: sleeping ? 'sleeping' : webOnline    ? 'up' : 'down',   date: entryDate, ping: webResult?.latency    ?? null };
+    const githubEntry = { state: githubState, date: entryDate, ping: githubPing };
+
+    histEditor.push(editorEntry);  if (histEditor.length > 30) histEditor = histEditor.slice(-30);
+    histWeb.push(webEntry);        if (histWeb.length > 30)    histWeb    = histWeb.slice(-30);
+    histGithub.push(githubEntry);  if (histGithub.length > 30) histGithub = histGithub.slice(-30);
+
+    localStorage.setItem('bpeHistEditor',  JSON.stringify(histEditor));
+    localStorage.setItem('bpeHistWeb',     JSON.stringify(histWeb));
+    localStorage.setItem('bpeHistGithub',  JSON.stringify(histGithub));
 
     if (prevStatus !== undefined && prevStatus !== newStatus) {
       if (newStatus === 'down')                            addIncident('🔴 Server went offline', 'red');
