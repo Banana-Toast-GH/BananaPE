@@ -446,7 +446,7 @@
     .history-bar.down     { background: var(--red); }
     .history-bar.sleeping { background: var(--banana); opacity: 0.45; }
     .history-bar.unknown  { background: var(--card-border); }
-    .history-bar.broken   { background: var(--orange); opacity: 0.7; }
+    .history-bar.broken   { background: var(--red); }
     .history-labels { display: flex; justify-content: space-between; font-size: 0.62rem; color: var(--muted); }
 
     /* endpoint rows */
@@ -981,7 +981,7 @@ event.end
         </div>
         <div id="noIpBannerStatus" style="display:none;margin-top:14px;padding:16px 24px;background:rgba(255,59,59,0.06);border:1px solid rgba(255,59,59,0.2);border-radius:12px;text-align:center;">
           <div style="font-size:2.5rem;margin-bottom:8px">🔌</div>
-          <div style="font-family:'Boogaloo',cursive;font-size:1.1rem;color:#FF7070;letter-spacing:1px;">BananaAI Is Temporarily Down Until We Get A Public IP.</div>
+          <div style="font-family:'Boogaloo',cursive;font-size:1.1rem;color:#FF7070;letter-spacing:1px;">Your Internet Currently Doesn't Support BananaAI.</div>
         </div>
       </div>
 
@@ -1170,7 +1170,7 @@ event.end
       </div>
       <div id="noIpBannerChat" style="display:none;flex-shrink:0;padding:28px 20px;text-align:center;border-bottom:1px solid rgba(255,59,59,0.15);">
         <div style="font-size:3rem;margin-bottom:10px">🔌</div>
-        <div style="font-family:'Boogaloo',cursive;font-size:1.2rem;color:#FF7070;letter-spacing:1px;">BananaAI Is Temporarily Down Until We Get A Public IP.</div>
+        <div style="font-family:'Boogaloo',cursive;font-size:1.2rem;color:#FF7070;letter-spacing:1px;">Your Internet Currently Doesn't Support BananaAI.</div>
       </div>
       <div class="messages" id="chatMessages">
         <div class="welcome-chat" id="chatWelcome">
@@ -1623,9 +1623,9 @@ script.end</pre>
     renderHistoryRow('historyBarsGithub', 'uptimePctGithub', histGithub, '🐙 GitHub API');
   }
 
-  const HEIGHTS = { up:'100%', sleeping:'50%', partial:'60%', down:'25%', unknown:'15%', broken:'37%' };
-  const STATE_COLORS = { up:'var(--green)', sleeping:'var(--banana)', partial:'var(--orange)', down:'var(--red)', unknown:'var(--muted)', broken:'var(--orange)' };
-  const STATE_LABELS = { up:'Online', sleeping:'Sleeping', partial:'Degraded', down:'Offline', unknown:'Unknown', broken:'Broken' };
+  const HEIGHTS = { up:'100%', sleeping:'50%', partial:'60%', down:'25%', unknown:'15%', broken:'25%' };
+  const STATE_COLORS = { up:'var(--green)', sleeping:'var(--banana)', partial:'var(--orange)', down:'var(--red)', unknown:'var(--muted)', broken:'var(--red)' };
+  const STATE_LABELS = { up:'Online', sleeping:'Sleeping', partial:'Degraded', down:'Offline', unknown:'Unknown', broken:'Offline' };
 
   function showTooltipOnBar(bar, entry, sourceName) {
     // Remove any existing tooltips
