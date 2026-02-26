@@ -1639,8 +1639,11 @@ script.end</pre>
       <div style="display:flex;justify-content:space-between;gap:16px;margin-bottom:3px"><span style="color:#666">Date</span><span style="color:var(--text)">${entry.date||'—'}</span></div>
       <div style="display:flex;justify-content:space-between;gap:16px"><span style="color:#666">Ping</span><span style="color:var(--banana)">${entry.ping != null ? entry.ping+'ms' : '—'}</span></div>
     `;
-    bar.style.position = 'relative';
-    bar.appendChild(tt);
+    // Append to the bars container instead of the bar itself
+    // so it doesn't inherit the bar's hover opacity
+    const container = bar.parentElement;
+    container.style.position = 'relative';
+    container.appendChild(tt);
   }
 
   function showTooltip(e, entry, sourceName) {
