@@ -1269,9 +1269,7 @@ script.end</pre>
                  download="BananaProjectEditor.zip">
                 ⬇ Download ZIP
               </a>
-              <a class="dl-btn secondary"
-                 href="https://github.com/Banana-Toast-GH/BananaProjectEditor/raw/main/BuildBPE.bat"
-                 download="BuildBPE.bat">
+              <a class="dl-btn secondary" onclick="downloadBat()" style="cursor:pointer">
                 🔧 Build Script (.bat)
               </a>
               <span class="dl-size">GitHub · Banana-Toast-GH/BananaProjectEditor</span>
@@ -1323,6 +1321,23 @@ script.end</pre>
 </div><!-- /layout -->
 
 <script>
+  /* ═══════════════════════════════════════
+     BAT DOWNLOADER
+  ═══════════════════════════════════════ */
+  async function downloadBat() {
+    try {
+      const res = await fetch('https://raw.githubusercontent.com/Banana-Toast-GH/BananaProjectEditor/main/BuildBPE.bat');
+      const text = await res.text();
+      const blob = new Blob([text], { type: 'application/octet-stream' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'BuildBPE.bat';
+      a.click();
+    } catch(e) {
+      window.open('https://github.com/Banana-Toast-GH/BananaProjectEditor/raw/main/BuildBPE.bat', '_blank');
+    }
+  }
+
   /* ═══════════════════════════════════════
      NAVIGATION
   ═══════════════════════════════════════ */
