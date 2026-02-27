@@ -1701,18 +1701,15 @@ script.end</pre>
     el.innerHTML = '';
     results.forEach(r => {
       el.innerHTML += `
-        <div class="endpoint-row" style="flex-direction:column;align-items:stretch;gap:0">
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <div style="display:flex;align-items:center">
-              <span class="ep-method ${r.method.toLowerCase()}">${r.method}</span>
-              <span class="ep-path">${r.path}</span>
-            </div>
-            <div style="display:flex;align-items:center">
-              <span class="ep-latency">${r.latency != null ? r.latency + 'ms' : '—'}</span>
-              <span class="ep-status ${r.ok ? 'ok' : 'error'}">${r.ok ? 'OK' : 'ERROR'}</span>
-            </div>
+        <div class="endpoint-row">
+          <div style="display:flex;align-items:center">
+            <span class="ep-method ${r.method.toLowerCase()}">${r.method}</span>
+            <span class="ep-path">${r.path}</span>
           </div>
-          ${getAnnotationHTML(r.path)}
+          <div style="display:flex;align-items:center">
+            <span class="ep-latency">${r.latency != null ? r.latency + 'ms' : '—'}</span>
+            <span class="ep-status ${r.ok ? 'ok' : 'error'}">${r.ok ? 'OK' : 'ERROR'}</span>
+          </div>
         </div>`;
     });
   }
@@ -1884,6 +1881,59 @@ script.end</pre>
   const MAX_TOKENS  = 1000;
   const CHAT_USER   = 'webchat_' + Math.random().toString(36).slice(2, 9);
 
+  // ── Supabase Relay ──────────────────────────────────────────────────────
+  const SUPA_URL      = "https://blvfmsuudupkzmpvtjxo.supabase.co";
+  const SUPA_ANON_KEY = "sb_publishable_Am2GEKAckW3V_a4SG5k1og_wQU4hJQk";
+
+  async function supaPost(path, data) {
+    const r = await fetch(SUPA_URL + "/rest/v1/" + path, {
+      method: "POST",
+      headers: {
+        "apikey": SUPA_ANON_KEY,
+        "Authorization": "Bearer " + SUPA_ANON_KEY,
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
+      },
+      body: JSON.stringify(data)
+    });
+    return r.ok ? await r.json() : null;
+  }
+
+  async function supaGet(path) {
+    const r = await fetch(SUPA_URL + "/rest/v1/" + path, {
+      headers: {
+        "apikey": SUPA_ANON_KEY,
+        "Authorization": "Bearer " + SUPA_ANON_KEY
+      }
+    });
+    return r.ok ? await r.json() : null;
+  }
+
+  async function sendViaRelay(message, session_id) {
+    // Insert pending row
+    const rows = await supaPost("messages", {
+      session_id: session_id || CHAT_USER,
+      user_id: CHAT_USER,
+      mode: "ask",
+      request: message,
+      status: "pending"
+    });
+    if (!rows || rows.length === 0) throw new Error("Failed to insert relay message");
+    const rowId = rows[0].id;
+
+    // Poll for response (up to 60s)
+    for (let i = 0; i < 30; i++) {
+      await new Promise(r => setTimeout(r, 2000));
+      const result = await supaGet(`messages?id=eq.${rowId}&select=status,response`);
+      if (result && result[0] && result[0].status === "done") {
+        return { response: result[0].response, session_id: session_id || CHAT_USER };
+      }
+    }
+    throw new Error("Relay timeout — server may be offline");
+  }
+
+  let useRelay = false; // flips to true if direct API fails
+
   let tokensLeft  = MAX_TOKENS;
   let chatSession = null;
   let chatBusy    = false;
@@ -1946,27 +1996,48 @@ script.end</pre>
     document.getElementById('sendBtn').disabled = true;
     showTypingIndicator();
     try {
-      const res = await fetch(`${CHAT_API}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: CHAT_USER, message: text, mode: 'ask', session_id: chatSession })
-      });
-      hideTypingIndicator();
-      if (!res.ok) {
-        const err = await res.json();
-        addChatMsg('ai', `⚠️ Error: ${err.error || 'Something went wrong.'}`, '');
+      let data;
+      if (useRelay) {
+        // Already know direct API is down — go straight to relay
+        data = await sendViaRelay(text, chatSession);
+        hideTypingIndicator();
       } else {
-        const data = await res.json();
-        chatSession = data.session_id;
-        const used = data.tokens_used?.generative || data.tokens_used?.breakdown?.total || 0;
-        tokensLeft = Math.max(0, tokensLeft - used);
-        updateTokenDisplay();
-        const gen = data.generation_time ? `${data.generation_time.toFixed(1)}s · ${used} tokens` : '';
-        addChatMsg('ai', data.response, gen);
+        // Try direct API first
+        try {
+          const res = await fetch(`${CHAT_API}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: CHAT_USER, message: text, mode: 'ask', session_id: chatSession }),
+            signal: AbortSignal.timeout(8000)
+          });
+          hideTypingIndicator();
+          if (!res.ok) {
+            const err = await res.json();
+            addChatMsg('ai', `⚠️ Error: ${err.error || 'Something went wrong.'}`, '');
+            chatBusy = false;
+            if (!isSleeping() && tokensLeft > 0) document.getElementById('sendBtn').disabled = false;
+            return;
+          }
+          data = await res.json();
+        } catch(e) {
+          // Direct failed — switch to relay
+          hideTypingIndicator();
+          showTypingIndicator();
+          console.warn('[Chat] Direct API failed, switching to relay:', e.message);
+          useRelay = true;
+          data = await sendViaRelay(text, chatSession);
+          hideTypingIndicator();
+        }
       }
+      chatSession = data.session_id;
+      const used = data.tokens_used?.generative || data.tokens_used?.breakdown?.total || 0;
+      if (used) tokensLeft = Math.max(0, tokensLeft - used);
+      updateTokenDisplay();
+      const gen = data.generation_time ? `${data.generation_time.toFixed(1)}s · ${used} tokens` : useRelay ? '(via relay)' : '';
+      addChatMsg('ai', data.response, gen);
     } catch(e) {
       hideTypingIndicator();
-      addChatMsg('ai', `⚠️ Can't reach BananaAI server.\n\`${e.message}\``, '');
+      addChatMsg('ai', `⚠️ Can't reach BananaAI.\n\`${e.message}\``, '');
     }
     chatBusy = false;
     if (!isSleeping() && tokensLeft > 0) document.getElementById('sendBtn').disabled = false;
@@ -1989,52 +2060,12 @@ script.end</pre>
   /* ═══════════════════════════════════════
      INIT
   ═══════════════════════════════════════ */
-  // Fetch dev annotations on load and periodically
-  let devAnnotations = {};
-  async function fetchAnnotations() {
-    try {
-      const r = await fetch(API + '/api/dev/annotations');
-      if (r.ok) devAnnotations = await r.json();
-    } catch {}
-  }
-
-  // Fetch server-side incidents and merge into local log
-  async function fetchServerIncidents() {
-    try {
-      const r = await fetch(API + '/api/dev/incidents');
-      if (!r.ok) return;
-      const serverIncs = await r.json();
-      serverIncs.forEach(si => {
-        const exists = incidents.some(i => i.title === si.title && i.time === si.time);
-        if (!exists) {
-          incidents.push(si);
-        }
-      });
-      if (incidents.length > 50) incidents = incidents.slice(-50);
-      localStorage.setItem('bpeIncidents', JSON.stringify(incidents));
-      renderIncidents();
-    } catch {}
-  }
-
-  function getAnnotationHTML(path) {
-    // Match path to service key (strip /api/ prefix for matching)
-    const key = Object.keys(devAnnotations).find(k => path.toLowerCase().includes(k.toLowerCase()));
-    if (!key || !devAnnotations[key] || devAnnotations[key].length === 0) return '';
-    return devAnnotations[key].map(note =>
-      `<div style="font-size:0.65rem;color:var(--banana);padding:4px 0 2px 2px;border-top:1px solid rgba(255,225,53,0.1);margin-top:4px">📝 ${note}</div>`
-    ).join('');
-  }
-
   applySleep();
   updateTokenDisplay();
   renderHistory();
   renderIncidents();
-  fetchAnnotations();
-  fetchServerIncidents();
   doRefresh();
   setInterval(applySleep, 60000);
-  setInterval(fetchAnnotations, 15000);
-  setInterval(fetchServerIncidents, 30000);
 </script>
 </body>
 </html>
