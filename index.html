@@ -1579,7 +1579,7 @@ script.end</pre>
 
     // Chat page
     document.getElementById('chatSleepBar').style.display = sleeping ? 'block' : 'none';
-    const noIpChatEl = document.getElementById('noIpBannerChat'); if (noIpChatEl && (sleeping || useRelay)) noIpChatEl.style.display = 'none';
+    const noIpChatEl = document.getElementById('noIpBannerChat'); if (noIpChatEl) noIpChatEl.style.display = 'none';
     const ci = document.getElementById('chatInput');
     const sb = document.getElementById('sendBtn');
     if (ci) { ci.disabled = sleeping; ci.placeholder = sleeping ? '😴 BananaAI is sleeping... back at 5:20 AM CST' : 'Ask BananaAI about BCode or BPE...'; }
