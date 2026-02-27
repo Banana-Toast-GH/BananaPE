@@ -1701,15 +1701,18 @@ script.end</pre>
     el.innerHTML = '';
     results.forEach(r => {
       el.innerHTML += `
-        <div class="endpoint-row">
-          <div style="display:flex;align-items:center">
-            <span class="ep-method ${r.method.toLowerCase()}">${r.method}</span>
-            <span class="ep-path">${r.path}</span>
+        <div class="endpoint-row" style="flex-direction:column;align-items:stretch;gap:0">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center">
+              <span class="ep-method ${r.method.toLowerCase()}">${r.method}</span>
+              <span class="ep-path">${r.path}</span>
+            </div>
+            <div style="display:flex;align-items:center">
+              <span class="ep-latency">${r.latency != null ? r.latency + 'ms' : '—'}</span>
+              <span class="ep-status ${r.ok ? 'ok' : 'error'}">${r.ok ? 'OK' : 'ERROR'}</span>
+            </div>
           </div>
-          <div style="display:flex;align-items:center">
-            <span class="ep-latency">${r.latency != null ? r.latency + 'ms' : '—'}</span>
-            <span class="ep-status ${r.ok ? 'ok' : 'error'}">${r.ok ? 'OK' : 'ERROR'}</span>
-          </div>
+          ${getAnnotationHTML(r.path)}
         </div>`;
     });
   }
@@ -1986,12 +1989,52 @@ script.end</pre>
   /* ═══════════════════════════════════════
      INIT
   ═══════════════════════════════════════ */
+  // Fetch dev annotations on load and periodically
+  let devAnnotations = {};
+  async function fetchAnnotations() {
+    try {
+      const r = await fetch(API + '/api/dev/annotations');
+      if (r.ok) devAnnotations = await r.json();
+    } catch {}
+  }
+
+  // Fetch server-side incidents and merge into local log
+  async function fetchServerIncidents() {
+    try {
+      const r = await fetch(API + '/api/dev/incidents');
+      if (!r.ok) return;
+      const serverIncs = await r.json();
+      serverIncs.forEach(si => {
+        const exists = incidents.some(i => i.title === si.title && i.time === si.time);
+        if (!exists) {
+          incidents.push(si);
+        }
+      });
+      if (incidents.length > 50) incidents = incidents.slice(-50);
+      localStorage.setItem('bpeIncidents', JSON.stringify(incidents));
+      renderIncidents();
+    } catch {}
+  }
+
+  function getAnnotationHTML(path) {
+    // Match path to service key (strip /api/ prefix for matching)
+    const key = Object.keys(devAnnotations).find(k => path.toLowerCase().includes(k.toLowerCase()));
+    if (!key || !devAnnotations[key] || devAnnotations[key].length === 0) return '';
+    return devAnnotations[key].map(note =>
+      `<div style="font-size:0.65rem;color:var(--banana);padding:4px 0 2px 2px;border-top:1px solid rgba(255,225,53,0.1);margin-top:4px">📝 ${note}</div>`
+    ).join('');
+  }
+
   applySleep();
   updateTokenDisplay();
   renderHistory();
   renderIncidents();
+  fetchAnnotations();
+  fetchServerIncidents();
   doRefresh();
   setInterval(applySleep, 60000);
+  setInterval(fetchAnnotations, 15000);
+  setInterval(fetchServerIncidents, 30000);
 </script>
 </body>
 </html>
