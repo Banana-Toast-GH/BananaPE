@@ -1579,7 +1579,7 @@ script.end</pre>
 
     // Chat page
     document.getElementById('chatSleepBar').style.display = sleeping ? 'block' : 'none';
-    const noIpChatEl = document.getElementById('noIpBannerChat'); if (noIpChatEl && sleeping) noIpChatEl.style.display = 'none';
+    const noIpChatEl = document.getElementById('noIpBannerChat'); if (noIpChatEl && (sleeping || useRelay)) noIpChatEl.style.display = 'none';
     const ci = document.getElementById('chatInput');
     const sb = document.getElementById('sendBtn');
     if (ci) { ci.disabled = sleeping; ci.placeholder = sleeping ? '😴 BananaAI is sleeping... back at 5:20 AM CST' : 'Ask BananaAI about BCode or BPE...'; }
@@ -1896,7 +1896,12 @@ script.end</pre>
       },
       body: JSON.stringify(data)
     });
-    return r.ok ? await r.json() : null;
+    if (!r.ok) {
+      const err = await r.text();
+      console.error("[Supabase] POST error:", r.status, err);
+      throw new Error("Supabase " + r.status + ": " + err);
+    }
+    return await r.json();
   }
 
   async function supaGet(path) {
@@ -1916,7 +1921,9 @@ script.end</pre>
       user_id: CHAT_USER,
       mode: "ask",
       request: message,
-      status: "pending"
+      response: "",
+      status: "pending",
+      created_at: new Date().toISOString()
     });
     if (!rows || rows.length === 0) throw new Error("Failed to insert relay message");
     const rowId = rows[0].id;
@@ -2025,6 +2032,8 @@ script.end</pre>
           showTypingIndicator();
           console.warn('[Chat] Direct API failed, switching to relay:', e.message);
           useRelay = true;
+          const noIpEl = document.getElementById('noIpBannerChat');
+          if (noIpEl) noIpEl.style.display = 'none';
           data = await sendViaRelay(text, chatSession);
           hideTypingIndicator();
         }
